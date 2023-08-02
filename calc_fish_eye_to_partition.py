@@ -2,6 +2,10 @@
 
 import math
 
+# Usage:
+#   Change args and constants as needed, then run:
+#   $ python3 calc_fish_eye_to_partition.py
+
 # Unit: SI units
 #   Meters (converted to cm at the end)
 #   Radians (converted to degrees at the very end if needed)
@@ -76,7 +80,8 @@ def calc_fish_eye_to_partition(h_f, h_w_prime):
 
 if __name__ == '__main__':
 
-  # Args
+  # Args to set each time
+
   # h_f_small: For small fish, height of fish eye from tank bottom. Estimated
   #   constant
   h_f_small = 0.02
