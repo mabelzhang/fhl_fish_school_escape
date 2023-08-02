@@ -7,8 +7,8 @@ import math
 #   $ python3 calc_fish_eye_to_partition.py
 
 # Unit: SI units
-#   Meters (converted to cm at the end)
-#   Radians (converted to degrees at the very end if needed)
+#   Meters (converted to cm for printouts)
+#   Radians
 
 # Solves for d_p
 # Parameters:
