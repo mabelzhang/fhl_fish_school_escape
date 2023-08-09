@@ -98,7 +98,7 @@ class CalcExperimentSetup:
     h_w = h_w_prime - h_f
     if h_w <= 0.0:
       print('%sERROR: h_w (%f, height of water above fish eye) <= 0, invalid, '
-        'fish would be out of water. Check your h_w_prime and h_f inputs.%s' %(
+        'fish would be out of water. Check your h_w_prime and h_f inputs.%s' % (
         ansi_colors.FAIL, h_w, ansi_colors.ENDC))
 
     # Angle from horizontal, of ray of fish eye to ball, without Snell's law
@@ -137,6 +137,8 @@ def main():
 
   calc = CalcExperimentSetup()
 
+  beta_degs = range(-80, 90, 10)
+
   # Args to set before running script
 
   # Small fish
@@ -154,20 +156,27 @@ def main():
   h_w_prime_small = 0.07 # 0.07 before trials, 0.03 after trials
 
   print('For small Cymatogaster:')
+  dists_small = []
 
   # beta: Angle between ball and fish eye. Default 0, fish is at shortest
   #   distance from ball, orthogonally in front of panel.
   # -90 to 90 degrees with 10 degree increments. Note at -90 and 90 will have
   #   division by zero. Ignore outputs.
-  for beta_degs in range(-90, 100, 10):
-    beta = beta_degs / 180.0 * math.pi
-    print('  beta_degs                            : %g' % beta_degs)
-    dist = calc.calc_fish_eye_to_partition(
+  for beta_deg in beta_degs:
+    beta = beta_deg / 180.0 * math.pi
+    print('  beta_deg                            : %g' % beta_deg)
+    dists_small.append(calc.calc_fish_eye_to_partition(
       h_f=h_f_small,
       h_p_prime=h_p_prime_small,
       h_b_prime=h_b_prime_small,
       h_w_prime=h_w_prime_small,
-      beta=beta)
+      beta=beta))
+
+  # Print everything in a succinct list
+  print('beta(degs)\tdistance(cm)')
+  for i in range(len(beta_degs)):
+    print('%g\t\t%.2g' % (beta_degs[i], dists_small[i] * 100))
+
 
   # Large fish
 
@@ -180,16 +189,22 @@ def main():
   h_w_prime_large = 0.08
 
   print('For large Cymatogaster:')
+  dists_large = []
 
-  for beta_degs in range(-90, 100, 10):
-    beta = beta_degs / 180.0 * math.pi
-    print('  beta_degs                            : %g' % beta_degs)
-    dist = calc.calc_fish_eye_to_partition(
+  for beta_deg in beta_degs:
+    beta = beta_deg / 180.0 * math.pi
+    print('  beta_deg                            : %g' % beta_deg)
+    dists_large.append(calc.calc_fish_eye_to_partition(
       h_f=h_f_large,
       h_p_prime=h_p_prime_large,
       h_b_prime=h_b_prime_large,
       h_w_prime=h_w_prime_large,
-      beta=beta)
+      beta=beta))
+
+  print('beta(degs)\tdistance(cm)')
+  for i in range(len(beta_degs)):
+    print('%g\t\t%.2g' % (beta_degs[i], dists_large[i] * 100))
+
 
 if __name__ == '__main__':
   main()
