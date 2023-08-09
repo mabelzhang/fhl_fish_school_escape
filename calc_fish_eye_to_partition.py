@@ -10,6 +10,18 @@ import math
 #   Meters (converted to cm for printouts)
 #   Radians
 
+# From http://stackoverflow.com/questions/287871/print-in-terminal-with-colors-using-python
+# ANSI colors https://gist.github.com/chrisopedia/8754917
+#   These ones here fall into the "High Intensity" category
+class ansi_colors:
+  OKCYAN = '\033[96m'
+  OKGREEN = '\033[92m'  # green
+  WARNING = '\033[93m'  # yellow
+  FAIL = '\033[91m'  # red
+
+  ENDC = '\033[0m'
+
+
 class CalcExperimentSetup:
 
   def __init__(self):
@@ -21,15 +33,12 @@ class CalcExperimentSetup:
   # Solves for d_p, without Snell's law of refraction.
   # Parameters:
   #   h_f: Height of fish eye from tank bottom. Estimated constant
+  #   h_p_prime: Height of partition from tank bottom. Measured
+  #   h_b_prime: Height of ball bottom from tank bottom. Measured
   #   beta: Angle between ball and fish eye. Default 0, fish is at shortest
   #     distance from ball, orthogonally in front of panel.
-  def calc_fish_eye_to_partition_no_Snell(self, h_f, beta=0):
-
-    # Measured quantities
-    # h_p_prime: Height of partition from tank bottom. Measured
-    h_p_prime = 0.075
-    # h_b_prime: Height of ball bottom from tank bottom. Measured
-    h_b_prime = 0.20
+  def calc_fish_eye_to_partition_no_Snell(self, h_f, h_p_prime, h_b_prime,
+    beta=0):
 
     # d_b: Horizontal distance between partition and ball. Measured
     d_b = 0.185
@@ -37,7 +46,9 @@ class CalcExperimentSetup:
     # If beta == pi/2 or -pi/2, will have division by zero
     if abs(beta - math.pi * 0.5) < 1e-6 or \
        abs(beta + math.pi * 0.5) < 1e-6:
-      print('WARN: Angle beta is pi/2. Division by zero')
+      print('%sWARN: Angle beta is pi/2. Division by zero%s' %(
+        ansi_colors.WARNING, ansi_colors.ENDC))
+
     d_b_beta = d_b / math.cos(beta)
 
     # h_p: Height of partition from fish eye height
@@ -70,17 +81,25 @@ class CalcExperimentSetup:
   # Solves for d_p_2, taking Snell's law of refraction into consideration.
   # Parameters:
   #   h_f: Height of fish eye from tank bottom. Estimated constant
+  #   h_p_prime: Height of partition from tank bottom. Measured
+  #   h_b_prime: Height of ball bottom from tank bottom. Measured
   #   h_w_prime: Height of water. May be different at different areas of tank
   #     because uneven bottom (in order to drain).
   #   beta: Angle between ball and fish eye. Default 0, fish is at shortest
   #     distance from ball, orthogonally in front of panel.
-  def calc_fish_eye_to_partition(self, h_f, h_w_prime, beta=0):
+  def calc_fish_eye_to_partition(self, h_f, h_p_prime, h_b_prime, h_w_prime,
+    beta=0):
 
     # Without Snell's law
-    d_p_1, h_p = self.calc_fish_eye_to_partition_no_Snell(h_f, beta)
+    d_p_1, h_p = self.calc_fish_eye_to_partition_no_Snell(
+      h_f, h_p_prime, h_b_prime, beta)
 
     # h_w: Height of water from fish eye height
     h_w = h_w_prime - h_f
+    if h_w <= 0.0:
+      print('%sERROR: h_w (%f, height of water above fish eye) <= 0, invalid, '
+        'fish would be out of water. Check your h_w_prime and h_f inputs.%s' %(
+        ansi_colors.FAIL, h_w, ansi_colors.ENDC))
 
     # Angle from horizontal, of ray of fish eye to ball, without Snell's law
     theta0 = math.atan2(h_p, d_p_1)
@@ -123,13 +142,18 @@ def main():
   # Small fish
 
   # h_f_small: For small fish, height of fish eye from tank bottom. Estimated
-  #   constant
+  #   constant. 2-3 cm
   h_f_small = 0.02
 
+  # Measured quantities
+  # h_p_prime: Height of partition from tank bottom. Measured
+  h_p_prime_small = 0.075 # 0.075 before trials, 0.055 after trials
+  # h_b_prime: Height of ball bottom from tank bottom. Measured
+  h_b_prime_small = 0.20
   # h_w_prime_small: For small fish, height of water from tank bottom.
-  h_w_prime_small = 0.07
+  h_w_prime_small = 0.07 # 0.07 before trials, 0.03 after trials
 
-  print("For small fish:")
+  print('For small Cymatogaster:')
 
   # beta: Angle between ball and fish eye. Default 0, fish is at shortest
   #   distance from ball, orthogonally in front of panel.
@@ -140,14 +164,32 @@ def main():
     print('  beta_degs                            : %g' % beta_degs)
     dist = calc.calc_fish_eye_to_partition(
       h_f=h_f_small,
+      h_p_prime=h_p_prime_small,
+      h_b_prime=h_b_prime_small,
       h_w_prime=h_w_prime_small,
       beta=beta)
 
   # Large fish
-  #h_f_large =
-  #h_w_prime_large
-  #calc_fish_eye_to_partition(h_f=h_f_large, h_w_prime=h_w_prime_large)
 
+  # Estimated
+  h_f_large = 0.03
+
+  # Measured
+  h_p_prime_large = 0.1
+  h_b_prime_large = 0.23
+  h_w_prime_large = 0.08
+
+  print('For large Cymatogaster:')
+
+  for beta_degs in range(-90, 100, 10):
+    beta = beta_degs / 180.0 * math.pi
+    print('  beta_degs                            : %g' % beta_degs)
+    dist = calc.calc_fish_eye_to_partition(
+      h_f=h_f_large,
+      h_p_prime=h_p_prime_large,
+      h_b_prime=h_b_prime_large,
+      h_w_prime=h_w_prime_large,
+      beta=beta)
 
 if __name__ == '__main__':
   main()
