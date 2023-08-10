@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import math
+import csv
 
 # Usage:
 #   Change args and constants as needed, then run:
@@ -138,6 +139,7 @@ def main():
   calc = CalcExperimentSetup()
 
   beta_degs = range(-80, 90, 10)
+  #beta_degs = range(-85, 90, 5)
 
   # Args to set before running script
 
@@ -204,6 +206,19 @@ def main():
   print('beta(degs)\tdistance(cm)')
   for i in range(len(beta_degs)):
     print('%g\t\t%.2g' % (beta_degs[i], dists_large[i] * 100))
+
+
+  # Write to csv
+  beta_degs_field = 'beta(degs)'
+  distance_field = 'distance(m)'
+  fieldnames = [beta_degs_field, distance_field]
+  with open('distances_large.csv', 'w') as f:
+    writer = csv.DictWriter(f, fieldnames=fieldnames)
+
+    writer.writeheader()
+    for i in range(len(beta_degs)):
+      writer.writerow({beta_degs_field: beta_degs[i],
+        distance_field: dists_large[i]})
 
 
 if __name__ == '__main__':
