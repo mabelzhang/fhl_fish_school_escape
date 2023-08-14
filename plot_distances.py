@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
 
+# Usage:
+#   $ python3 calc_fish_eye_to_partition.py
+#   Output: distances_large.csv
+#   $ python3 plot_distances.py
+#   Input: distances_large.csv
+#   Output:
+#     distances_<fish_size>_from_panel.eps
+#     distances_<fish_size>_from_panel.png
+
 import csv
 import math
 
@@ -53,7 +62,7 @@ def main():
       curr_x = dist * math.tan(beta_rad)
       x_along_panel.append(curr_x)
 
-      print('%g\t\t%g\t%g' % (beta_deg, dist, curr_x)),
+      print('%g\t\t%g\t%g' % (beta_deg, float(row[distance_field]), curr_x)),
 
 
   w, h = plt.figaspect(0.3)
@@ -67,7 +76,7 @@ def main():
   # panel, not from the ball. (Though the distances need to be calculated from
   # the ball because beta angle starts at the ball.)
   ys = dists_cm - d_b_cm
-  bar_hdl = ax.bar(x_along_panel_cm, ys)
+  bar_hdl = ax.bar(x_along_panel_cm, ys, color='g')
 
   bar_lbls = []
   for i in range(len(ys)):
@@ -75,7 +84,7 @@ def main():
   ax.bar_label(bar_hdl, labels=bar_lbls)
 
   plt.title('Distance from panel at various angles from stimulus '
-    'located at y=-%g cm' % (d_b_cm))
+    'located at (0, -%g)' % (d_b_cm))
   plt.xlabel('x along panel (cm), panel width 76 cm')
   plt.ylabel('Distance from panel (cm)')
   plt.ylim([0, 9])

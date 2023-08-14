@@ -6,6 +6,7 @@ import csv
 # Usage:
 #   Change args and constants as needed, then run:
 #   $ python3 calc_fish_eye_to_partition.py
+#     Output: distances_large.csv
 
 # Unit: SI units
 #   Meters (converted to cm for printouts)
@@ -136,7 +137,7 @@ class CalcExperimentSetup:
 
 def main():
 
-  calc = CalcExperimentSetup()
+  calc_small = CalcExperimentSetup()
 
   beta_degs = range(-80, 90, 10)
   #beta_degs = range(-85, 90, 5)
@@ -167,7 +168,7 @@ def main():
   for beta_deg in beta_degs:
     beta = beta_deg / 180.0 * math.pi
     print('  beta_deg                            : %g' % beta_deg)
-    dists_small.append(calc.calc_fish_eye_to_partition(
+    dists_small.append(calc_small.calc_fish_eye_to_partition(
       h_f=h_f_small,
       h_p_prime=h_p_prime_small,
       h_b_prime=h_b_prime_small,
@@ -177,10 +178,12 @@ def main():
   # Print everything in a succinct list
   print('beta(degs)\tdistance(cm)')
   for i in range(len(beta_degs)):
-    print('%g\t\t%.2g' % (beta_degs[i], dists_small[i] * 100))
+    print('%g\t\t%g' % (beta_degs[i], dists_small[i] * 100))
 
 
   # Large fish
+
+  calc_large = CalcExperimentSetup()
 
   # Estimated
   h_f_large = 0.03
@@ -196,7 +199,7 @@ def main():
   for beta_deg in beta_degs:
     beta = beta_deg / 180.0 * math.pi
     print('  beta_deg                            : %g' % beta_deg)
-    dists_large.append(calc.calc_fish_eye_to_partition(
+    dists_large.append(calc_large.calc_fish_eye_to_partition(
       h_f=h_f_large,
       h_p_prime=h_p_prime_large,
       h_b_prime=h_b_prime_large,
@@ -205,7 +208,7 @@ def main():
 
   print('beta(degs)\tdistance(cm)')
   for i in range(len(beta_degs)):
-    print('%g\t\t%.2g' % (beta_degs[i], dists_large[i] * 100))
+    print('%g\t\t%g' % (beta_degs[i], dists_large[i] * 100))
 
 
   # Write to csv
