@@ -6,7 +6,8 @@ import csv
 # Usage:
 #   Change args and constants as needed, then run:
 #   $ python3 calc_fish_eye_to_partition.py
-#     Output: distances_large.csv
+#     Output: distances_small.csv
+#             distances_large.csv
 
 # Unit: SI units
 #   Meters (converted to cm for printouts)
@@ -142,6 +143,9 @@ def main():
   beta_degs = range(-80, 90, 10)
   #beta_degs = range(-85, 90, 5)
 
+  beta_degs_field = 'beta(degs)'
+  distance_field = 'distance(m)'
+
   # Args to set before running script
 
   # Small fish
@@ -180,6 +184,16 @@ def main():
   for i in range(len(beta_degs)):
     print('%g\t\t%g' % (beta_degs[i], dists_small[i] * 100))
 
+  # Write to csv
+  fieldnames = [beta_degs_field, distance_field]
+  with open('distances_small.csv', 'w') as f:
+    writer = csv.DictWriter(f, fieldnames=fieldnames)
+
+    writer.writeheader()
+    for i in range(len(beta_degs)):
+      writer.writerow({beta_degs_field: beta_degs[i],
+        distance_field: dists_small[i]})
+
 
   # Large fish
 
@@ -212,8 +226,6 @@ def main():
 
 
   # Write to csv
-  beta_degs_field = 'beta(degs)'
-  distance_field = 'distance(m)'
   fieldnames = [beta_degs_field, distance_field]
   with open('distances_large.csv', 'w') as f:
     writer = csv.DictWriter(f, fieldnames=fieldnames)

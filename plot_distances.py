@@ -1,24 +1,27 @@
 #!/usr/bin/env python3
 
 # Usage:
-#   $ python3 calc_fish_eye_to_partition.py
-#   Output: distances_large.csv
+#   First, calculate distances and generate csv file:
+#   $ python3 calc_fish_eye_to_partition.py <small|large>
+#   Output: distances_<fish_size>.csv
+#
+#   Then plot from csv file:
 #   $ python3 plot_distances.py
-#   Input: distances_large.csv
+#   Input: distances_<fish_size>.csv
 #   Output:
 #     distances_<fish_size>_from_panel.eps
 #     distances_<fish_size>_from_panel.png
 
 import csv
 import math
+import sys
 
 import numpy as np
 
 import matplotlib.pyplot as plt
 
-def main():
-
-  fish_size = 'large'
+# fish_size: 'small' or 'large', substring for input and output file names
+def main(fish_size):
 
   # Constant from calc_fish_eye_to_partition.py
   # d_b: Horizontal distance between partition and ball. Measured. Meters
@@ -87,7 +90,7 @@ def main():
     'located at (0, -%g)' % (d_b_cm))
   plt.xlabel('x along panel (cm), panel width 76 cm')
   plt.ylabel('Distance from panel (cm)')
-  plt.ylim([0, 9])
+  plt.ylim([0, np.max(ys) + 2])
 
   # Eliminate white spaces before saving
   plt.tight_layout()
@@ -98,4 +101,15 @@ def main():
 
 
 if __name__ == '__main__':
-  main()
+  if len(sys.argv) < 2:
+    print('No arg specified.')
+    print('Usage: python3 calc_fish_eye_to_partition.py <small|large>')
+    sys.exit(1)
+
+  if sys.argv[1] != 'small' and sys.argv[1] != 'large':
+    print('Undefined arg for fish size.')
+    print('Usage: python3 calc_fish_eye_to_partition.py <small|large>')
+    sys.exit(1)
+
+  print('Plotting for fish size: %s' % sys.argv[1])
+  main(sys.argv[1])
