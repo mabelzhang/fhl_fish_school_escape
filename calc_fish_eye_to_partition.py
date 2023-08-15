@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
-import math
 import csv
+import math
+import os
 
 # Usage:
 #   Change args and constants as needed, then run:
@@ -143,6 +144,8 @@ def main():
   beta_degs = range(-80, 90, 10)
   #beta_degs = range(-85, 90, 5)
 
+  # Output directory
+  out_dir = 'out'
   beta_degs_field = 'beta(degs)'
   distance_field = 'distance(m)'
 
@@ -186,7 +189,7 @@ def main():
 
   # Write to csv
   fieldnames = [beta_degs_field, distance_field]
-  with open('distances_small.csv', 'w') as f:
+  with open(os.path.join(out_dir, 'distances_small.csv'), 'w') as f:
     writer = csv.DictWriter(f, fieldnames=fieldnames)
 
     writer.writeheader()
@@ -227,7 +230,7 @@ def main():
 
   # Write to csv
   fieldnames = [beta_degs_field, distance_field]
-  with open('distances_large.csv', 'w') as f:
+  with open(os.path.join(out_dir, 'distances_large.csv'), 'w') as f:
     writer = csv.DictWriter(f, fieldnames=fieldnames)
 
     writer.writeheader()

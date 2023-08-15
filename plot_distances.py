@@ -14,6 +14,7 @@
 
 import csv
 import math
+import os
 import sys
 
 import numpy as np
@@ -28,6 +29,8 @@ def main(fish_size):
   d_b = 0.185
   d_b_cm = d_b * 100
 
+  # Output directory
+  out_dir = 'out'
   beta_degs_field = 'beta(degs)'
   distance_field = 'distance(m)'
   fieldnames = [beta_degs_field, distance_field]
@@ -40,7 +43,7 @@ def main(fish_size):
   x_along_panel = []
 
   fieldnames = None
-  with open('distances_' + fish_size + '.csv', 'r') as f:
+  with open(os.path.join(out_dir, 'distances_' + fish_size + '.csv'), 'r') as f:
     reader = csv.DictReader(f)
     fieldnames = reader.fieldnames
 
@@ -94,8 +97,12 @@ def main(fish_size):
 
   # Eliminate white spaces before saving
   plt.tight_layout()
-  plt.savefig('distances_' + fish_size + '_from_panel.eps', bbox_inches='tight')
-  plt.savefig('distances_' + fish_size + '_from_panel.png', bbox_inches='tight')
+  plt.savefig(
+    os.path.join(out_dir, 'distances_' + fish_size + '_from_panel.eps'),
+    bbox_inches='tight')
+  plt.savefig(
+    os.path.join(out_dir, 'distances_' + fish_size + '_from_panel.png'),
+    bbox_inches='tight')
 
   plt.show()
 
