@@ -158,12 +158,18 @@ def main():
   h_f_small = 0.02
 
   # Measured quantities
+
   # h_p_prime: Height of partition from tank bottom. Measured
-  h_p_prime_small = 0.075 # 0.075 before trials, 0.055 after trials
+  h_p_prime_small = 0.075 # 0.075 before Sony trials, 0.055 (fell) after
+
   # h_b_prime: Height of ball bottom from tank bottom. Measured
-  h_b_prime_small = 0.20
+  # Sony 0.2
+  #h_b_prime_small = 0.20
+  # GoPro 0.23, forgot to adjust from large fish
+  h_b_prime_small = 0.23
+
   # h_w_prime_small: For small fish, height of water from tank bottom.
-  h_w_prime_small = 0.07 # 0.07 before trials, 0.03 after trials
+  h_w_prime_small = 0.07 # 0.07 before Sony trials, 0.03 (fell) after
 
   print('For small Cymatogaster:')
   dists_small = []

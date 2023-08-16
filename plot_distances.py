@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+# Plot distances from partition within which fish on non-stimulus side can
+# see stimulus through the gap in air and water.
+
 # Usage:
 #   First, calculate distances and generate csv file:
 #   $ python3 calc_fish_eye_to_partition.py <small|large>
