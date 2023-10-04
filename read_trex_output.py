@@ -15,6 +15,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
+# Each instance is one tracked fish's files (csv and npz) outputted from TRex
+#class Fish:
+
+#  def __init__(self):
+
+
+
+
+# Functions for plotting
 class Plotter:
 
   def __init__(self):
@@ -32,8 +41,24 @@ class Plotter:
     # For plots
     self.defaultSize = None
 
+    # Indicates that the csv file has been read into data
+    self.csv_done = False
+    self.px = []
+    self.py = []
+    self.vx = []
+    self.vy = []
+    self.ax = []
+    self.ay = []
+    self.angles = []
+
+    # Write to file. If files already exist, set to False to avoid overwrite
+    self.SAVE_FIGS = True
+
+    self.PLOT_BG_COLOR = 'black'
+
+
   # Load and plot positional data from csv file exported by TRex
-  def plot_positional(self):
+  def read_csv(self):
 
     # CSV contains positional data
     # Data for 1 fish
@@ -83,14 +108,15 @@ class Plotter:
  
     n_valid_rows = 0
  
+    # Wipe all data
     frames = []
-    px = []
-    py = []
-    vx = []
-    vy = []
-    ax = []
-    ay = []
-    angles = []
+    self.px = []
+    self.py = []
+    self.vx = []
+    self.vy = []
+    self.ax = []
+    self.ay = []
+    self.angles = []
  
     #####
     # Read csv output file from TRex
@@ -109,24 +135,32 @@ class Plotter:
         frames.append(int(float(row[FRAME_FD])))
  
         # Populate vars with data
-        px.append(float(row[X_FD]))
-        py.append(float(row[Y_FD]))
+        self.px.append(float(row[X_FD]))
+        self.py.append(float(row[Y_FD]))
  
-        vx.append(float(row[VX_FD]))
-        vy.append(float(row[VY_FD]))
+        self.vx.append(float(row[VX_FD]))
+        self.vy.append(float(row[VY_FD]))
  
-        ax.append(float(row[AX_FD]))
-        ay.append(float(row[AY_FD]))
+        self.ax.append(float(row[AX_FD]))
+        self.ay.append(float(row[AY_FD]))
  
-        angles.append(float(row[ANGLE_FD]))
+        self.angles.append(float(row[ANGLE_FD]))
  
         print('frame %d, px %g, py %g, vx %g, vy %g, ax %g, ay %g, angle %g' % (
-          frames[n_valid_rows], px[n_valid_rows], py[n_valid_rows],
-          vx[n_valid_rows], vy[n_valid_rows],
-          ax[n_valid_rows], ay[n_valid_rows],
-          angles[n_valid_rows]))
+          frames[n_valid_rows], self.px[n_valid_rows], self.py[n_valid_rows],
+          self.vx[n_valid_rows], self.vy[n_valid_rows],
+          self.ax[n_valid_rows], self.ay[n_valid_rows],
+          self.angles[n_valid_rows]))
  
         n_valid_rows += 1
+
+    self.csv_done = True
+
+
+  def plot_positional(self):
+
+    if not self.csv_done:
+      self.read_csv()
  
     fig, axes = plt.subplots()
     self.set_dpi(fig, 2)
@@ -148,22 +182,50 @@ class Plotter:
     plt.title('ay')
  
     plt.subplot(325)
-    plt.plot(frames, np.array(angles) * 180 / np.pi)
+    plt.plot(frames, np.array(self.angles) * 180 / np.pi)
     plt.title('absolute angle')
  
     # Eliminate white spaces before saving
     plt.tight_layout()
     # TODO: Title too low, move higher
     #plt.suptitle(self.in_base)
-    plt.savefig(self.out_prefix + '.eps', bbox_inches='tight')
-    plt.savefig(self.out_prefix + '.png', bbox_inches='tight')
+    if self.SAVE_FIGS:
+      plt.savefig(self.out_prefix + '.eps', bbox_inches='tight')
+      plt.savefig(self.out_prefix + '.png', bbox_inches='tight')
+
+    plt.show()
+
+
+  def plot_angles(self):
+
+    if not self.csv_done:
+      self.read_csv()
  
     # Polar plot of absolute angles
-    self.plot_circular_hist(angles, self.out_prefix + '_angles', self.in_base,
-      2)
+    self.plot_hist(self.angles, self.out_prefix + '_angles', self.in_base,
+      2, {'projection': 'polar'})
 
-    #plt.show()
- 
+
+  # TODO: Need to load multiple files for this
+  def plot_nnd(self, px, py):
+
+    # Plot histogram of nearest neighbor distance
+
+    # Tile for matrix parallelization
+    # Tile (y, 1) shape along x
+    px_tiled = np.repeat(np.reshape(px, (len(px), 1)), len(px), axis=1)
+    # Transpose and tile (1, y) shape along y
+    py_tiled = np.repeat(np.reshape(py, (1, len(py))), len(py), axis=0)
+
+    print(px_tiled.shape)
+    print(py_tiled.shape)
+
+    dists = np.sqrt(np.multiply(px_tiled, px_tiled) + np.multiply(
+      py_tiled, py_tiled))
+
+    # Linear histogram
+    self.plot_hist(dists, self.out_prefix + 'nnd', self.in_base, 2)
+
 
   # Load and plot posture data from NumPy npz file exported by TRex
   def plot_posture(self):
@@ -190,9 +252,65 @@ class Plotter:
     # Default midline_stiff_percentage is 0.15
     midline_angles = postures['midline_angle']
 
-    self.plot_circular_hist(midline_angles,
-      self.npz_out_prefix + 'midline_angles', self.npz_in_base, 2)
+    self.plot_hist(midline_angles,
+      self.npz_out_prefix + 'midline_angles', self.npz_in_base, 2,
+      {'projection': 'polar'})
  
+
+  # Plot histogram, linear or polar.
+  # For polar plot, pass in arg {'projection': 'polar'}
+  def plot_hist(self, angles, out_pref, title, multiplier=1,
+    subplot_kw={}):
+
+    figp, axesp = plt.subplots(subplot_kw=subplot_kw)
+    if self.defaultSize is None:
+      self.set_dpi(figp, multiplier)
+
+    if self.PLOT_BG_COLOR == 'black':
+      self.black_background(False, subplot_kw)
+
+    # Font size
+    # Title size
+    plt.rcParams.update({'font.size': 32})
+    # Tick label size
+    plt.tick_params (axis='x', labelsize=30)
+    plt.tick_params (axis='y', labelsize=24)
+
+    # Take histogram
+    n_bins = int(math.ceil(360 / 5.0))
+    angles_hist, angles_bin_edges = np.histogram(angles, bins=n_bins)
+
+    # Get the midpoint between bin edges
+    angles_bin_pts = angles_bin_edges + 0.5 * (
+      angles_bin_edges[0] + angles_bin_edges[1])
+    angles_bin_pts = angles_bin_pts[:n_bins]
+
+    # Plot histogram
+    hist_width = 2 * np.pi / n_bins
+    hist_colors = plt.cm.viridis(angles_hist)
+    axesp.bar(angles_bin_pts, angles_hist, width=hist_width,
+      bottom=0.0, color=hist_colors, alpha=0.5)
+
+    # Save figure
+    figp.set_size_inches(self.defaultSize[0] * 2, self.defaultSize[0] * 2)
+    Size = figp.get_size_inches()
+    # Eliminate white spaces before saving
+    plt.tight_layout()
+    plt.title(title)
+    if self.SAVE_FIGS:
+      if self.PLOT_BG_COLOR == 'black':
+        plt.savefig(out_pref + '_black.eps', bbox_inches='tight',
+          dpi=self.dpi * multiplier, facecolor=figp.get_facecolor(),
+          edgecolor='none')
+        plt.savefig(out_pref + '_black.png', bbox_inches='tight',
+          dpi=self.dpi * multiplier, facecolor=figp.get_facecolor(),
+          edgecolor='none')
+      else:
+        plt.savefig(out_pref + '.eps', bbox_inches='tight',
+          dpi=self.dpi * multiplier)
+        plt.savefig(out_pref + '.png', bbox_inches='tight',
+          dpi=self.dpi * multiplier)
+
 
   # multiplier: this many times default. Larger means higher resolution, but
   #   font size may look smaller
@@ -214,44 +332,56 @@ class Plotter:
     print(Size)
 
 
-  def plot_circular_hist(self, angles, out_pref, title, multiplier=1):
+  # Set plot parameters to plot on black background
+  def black_background(self, have_legend=False, subplot_kw={}):
 
-    figp, axesp = plt.subplots(subplot_kw={'projection': 'polar'})
-    if self.defaultSize is None:
-      self.set_dpi(figp, multiplier)
+    # Set background color black
+    ax = plt.gca ()
+    ax.set_facecolor('black')
+    fig = plt.gcf ()
+    fig.set_facecolor ('black')
 
-    # Take histogram
-    n_bins = int(math.ceil(360 / 5.0))
-    angles_hist, angles_bin_edges = np.histogram(angles, bins=n_bins)
+    # Font color
+    plt.rcParams['axes.titlecolor'] = 'white'
+
+    # See all rc params
+    print(plt.rcParams.keys())
  
-    # Get the midpoint between bin edges
-    angles_bin_pts = angles_bin_edges + 0.5 * (
-      angles_bin_edges[0] + angles_bin_edges[1])
-    angles_bin_pts = angles_bin_pts[:n_bins]
- 
-    # Plot histogram
-    hist_width = 2 * np.pi / n_bins
-    hist_colors = plt.cm.viridis(angles_hist)
-    axesp.bar(angles_bin_pts, angles_hist, width=hist_width, bottom=0.0,
-      color=hist_colors, alpha=0.5)
- 
-    # Save figure
-    figp.set_size_inches(self.defaultSize[0] * 2, self.defaultSize[0] * 2)
-    Size = figp.get_size_inches()
-    # Eliminate white spaces before saving
-    plt.tight_layout()
-    plt.title(title)
-    plt.savefig(out_pref + '.eps', bbox_inches='tight',
-      dpi=self.dpi * multiplier)
-    plt.savefig(out_pref + '.png', bbox_inches='tight',
-      dpi=self.dpi * multiplier)
+    # Make axes labels white
+    # Doesn't work for polar plots
+    if 'projection' in subplot_kw.keys() and \
+        subplot_kw['projection'] != 'polar':
+      ax.spines ['bottom'].set_color ('white')
+      ax.spines ['top'].set_color ('white')
+      ax.spines ['left'].set_color ('white')
+      ax.spines ['right'].set_color ('white')
+
+    ax.xaxis.label.set_color ('white')
+    ax.tick_params (axis='x', colors='white')
+
+    ax.yaxis.label.set_color ('white')
+    ax.tick_params (axis='y', colors='white')
+
+    if have_legend:
+      # Set legend to be white on black
+      legend = plt.legend (loc=0, fontsize=10)
+
+      # Set legend background color
+      legend.get_frame ().set_facecolor (self.PLOT_BG_COLOR)
+      # If background is black, set white text color
+      if self.PLOT_BG_COLOR == 'black':
+        legend.get_frame ().set_edgecolor ('white')
+        for text in legend.get_texts ():
+          text.set_color ('white')
 
 
 def main():
 
   plotter = Plotter()
 
-  plotter.plot_positional()
+  #plotter.plot_positional()
+
+  plotter.plot_angles()
 
   # The midline_angle in npz is exactly the same as the absolute angles in the
   # csv, pointless to replot.
